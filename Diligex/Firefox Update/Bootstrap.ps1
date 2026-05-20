@@ -7,7 +7,7 @@
 
 $ErrorActionPreference = 'Stop'
 $ScriptName = "Firefox_Bootstrap"
-$ScriptVersion = "3.0.1"
+$ScriptVersion = "3.0.2"
 $EnableSlackAlerts = $true
 $DebugSlackNoOp = $false
 $slackWebhookURL = "https://hooks.slack.com/services/YOUR_WORKSPACE/YOUR_CHANNEL/YOUR_TOKEN" # REPLACE WITH ACTUAL WEBHOOK
@@ -87,7 +87,27 @@ try {
     }
     Write-Log "ACLs applied."
 
-    $CurrentStage = "Final Verification"
+         = "Cleanup Legacy Artifacts"
+     = @("AITS_Firefox_UserMaintenance", "AITS_FirefoxUpdateUser")
+    foreach ( in ) {
+        if (Get-ScheduledTask -TaskName  -ErrorAction SilentlyContinue) {
+            Unregister-ScheduledTask -TaskName  -Confirm:False -ErrorAction SilentlyContinue
+            Write-Log "Removed legacy scheduled task: "
+        }
+    }
+
+     = @(
+        "$BaseDir\scripts\FirefoxUpdateUser.ps1",
+        "$BaseDir\scripts\user\FirefoxUpdateUser.ps1"
+    )
+    foreach ( in ) {
+        if (Test-Path -LiteralPath ) {
+            Remove-Item -LiteralPath  -Force -ErrorAction SilentlyContinue
+            Write-Log "Removed legacy script: "
+        }
+    }
+
+     = "Final Verification"
     $Marker = @{
         BootstrapVersion = $ScriptVersion
         CreatedUtc = (Get-Date).ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ssZ")
@@ -104,3 +124,4 @@ try {
 } finally {
     Write-Log "Bootstrap routine finished."
 }
+
