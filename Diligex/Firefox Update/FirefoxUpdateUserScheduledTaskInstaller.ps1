@@ -6,6 +6,7 @@
 
 $ErrorActionPreference = 'Stop'
 $ScriptName = "FirefoxUpdateUser_Installer"
+$ScriptVersion = "3.0.2"
 $EnableSlackAlerts = $true
 $slackWebhookURL = "https://hooks.slack.com/services/YOUR_WORKSPACE/YOUR_CHANNEL/YOUR_TOKEN" # REPLACE WITH ACTUAL WEBHOOK
 
@@ -20,7 +21,7 @@ $Base64Script = "BASE64_PLACEHOLDER_USER"
 
 function Send-ToSlack($Color, $Title, $Text) {
     if (-not $EnableSlackAlerts -or $slackWebhookURL -like "*XXXXX*") { return }
-    $Payload = @{ attachments = @(@{ title = "$Title ($env:COMPUTERNAME)"; text = $Text; color = $Color }) }
+    $Payload = @{ attachments = @(@{ title = "$Title ($env:COMPUTERNAME)"; text = $Text; color = $Color; footer = "$ScriptName v$ScriptVersion" }) }
     try { Invoke-RestMethod -Method Post -Uri $slackWebhookURL -Body (ConvertTo-Json $Payload -Depth 4) -ContentType "application/json" } catch {}
 }
 
