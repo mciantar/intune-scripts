@@ -11,8 +11,9 @@ $slackWebhookURL = "https://hooks.slack.com/services/YOUR_WORKSPACE/YOUR_CHANNEL
 
 $BaseDir = "C:\ProgramData\WorkstationManagement\Firefox"
 $BootstrapMarker = "$BaseDir\state\bootstrap-complete.json"
-$ScriptDest = "$BaseDir\scripts\user\FirefoxUpdateUser.ps1"
-$TaskName = "AITS_FirefoxUpdateUser"
+$ScriptDest = "$BaseDir\scripts\user\FirefoxUpdateUser_$UserSID.ps1"
+$UserSID = [System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+$TaskName = "AITS_FirefoxUpdateUser_$UserSID"
 
 # BASE64_PLACEHOLDER_USER
 $Base64Script = "BASE64_PLACEHOLDER_USER"
@@ -40,7 +41,7 @@ try {
 
     $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -NoProfile -File `"$ScriptDest`""
     $Trigger = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Hours 4)
-    $Principal = New-ScheduledTaskPrincipal -GroupId "BUILTIN\Users" -RunLevel Limited
+    $Principal = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive -RunLevel Limited
     $Settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -MultipleInstances Parallel
 
     Register-ScheduledTask -TaskName $TaskName -Action $Action -Trigger $Trigger -Principal $Principal -Settings $Settings -Force | Out-Null
@@ -50,5 +51,6 @@ try {
     Send-ToSlack "#ff0000" "User Task Installer Failed" "Error: $($_.Exception.Message)"
     exit 1
 }
+
 
 
